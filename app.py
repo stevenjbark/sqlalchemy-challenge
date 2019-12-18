@@ -15,7 +15,7 @@ engine = create_engine("sqlite:///Resources/hawaii.sqlite")
 
 #Reflect database into new model
 Base = automap_base()
-base.prepare(engine, relfect=True)
+Base.prepare(engine, reflect=True)
 
 #Save reference variables to the tables
 Measurement = Base.classes.measurement
@@ -37,22 +37,42 @@ def welcome():
     )
 
 @app.route("/api/v1.0/precipitation")
-#Communication session with database, Query Measurement database for date and prcp data.
-session = Session(engine)
-prcp_results = session.query(Mesurement.date, Measurement.prcp).all()
+def precipitation():
 
-#Close session
-session.close()
+    #Communication session with Measurement database, Query Measurement database for date and prcp data.
+    session = Session(engine)
+    prcp_results = session.query(Measurement.date, Measurement.prcp).all()
 
- #Create dictionary of Measurement.date key and Measurement.prcp value
-precipitation = []
-for p in prcp_results:
-    p_dict = {}
-    p_dict["date"] = p.date
-    p_dict["prcp"] = p.prcp
-    precipitation.append(p_dict)
+    #Close session
+    session.close()
 
-return jsonify(precipitation)
+    #Create dictionary of Measurement.date key and Measurement.prcp value
+    precipitation = []
+    for p in prcp_results:
+        p_dict = {}
+        p_dict["date"] = p.date
+        p_dict["prcp"] = p.prcp
+        precipitation.append(p_dict)
+
+    return jsonify(precipitation)
+
+@app.route("/api/v1.0/stations")
+def stations():
+
+    #Communication session with Stations database, Query for stations. 
+    session = Session(engine)
+    station_results = session.query(Station.station).all()
+
+    #Close session
+    session.close()
+
+    #Create list for stations in query
+    station_list = []
+    for l in station_results:
+        station_list.append(l)
+        final_stations = list(set(station_list))
+
+    return jsonify(final_stations))    
 
 
 if __name__ == '__main__':
