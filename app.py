@@ -66,13 +66,17 @@ def stations():
     #Close session
     session.close()
 
-    #Create list for stations in query
+    #Create unique list for stations in query by set, not using a dictionary which would also work.
     station_list = []
     for l in station_results:
         station_list.append(l)
         final_stations = list(set(station_list))
 
-    return jsonify(final_stations))    
+    return jsonify(final_stations)    
+
+@app.route("/api/v1.0/tobs")
+def temperature():
+    
 
 
 if __name__ == '__main__':
