@@ -6,7 +6,7 @@ import os
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func
 
 from flask import Flask, jsonify
 
@@ -99,23 +99,19 @@ def temperature():
 @app.route("/api/v1.0/temp_calculator/<start_date>/<end_date>")
 def ave_temp(start_date,end_date="2017-08-23"):
 
-    #Communication session with Measurement database for temperature data over start and end dates and makes a query object temp_calcs.
+    #Communication session with Measurement database for temperature data over start and end dates
     session = Session(engine)
-    temp_calcs = session.query(Measurement.tobs).filter(Measurement.date>=start_date).filter(Measurement.date<=end_date)
 
-    #Iterate over temp_calcs object and append to calc_list, makes a list of temperatures for analysis in Python
+    #Query based on start and start/end dates. Uses func capabilities for calculations inside sqlalchemy session.query.
+    temp_calcs = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
+           filter(Measurement.date >= start_date).filter(Measurement.date <= end_date)
+
     calc_list = []
     for c in temp_calcs:
-        calc_list.append(c[0])
+        calc_list.append(c)
 
-    #Calculate the max, min, and average temp for the time period using the calc_list. Make final_list for t_max, t_min, t_avg.
-    t_max = max(calc_list)
-    t_min = min(calc_list)
-    t_avg = sum(calc_list) / len(calc_list)
-    final_list = [t_max, t_min, t_avg]
-
-    #Returns final list for max, min, and average temps, start date, but the start date doesn't work in session.query!
-    return jsonify(final_list, f"Start Date: {start_date}", f"End Date: {end_date}")
+    #Returns final list for max, min, and average temps, start date.
+    return jsonify(calc_list, f"Start Date: {start_date}", f"End Date: {end_date}")
 
     
 if __name__ == '__main__':
